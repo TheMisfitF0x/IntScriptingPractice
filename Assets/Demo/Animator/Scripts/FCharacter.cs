@@ -4,18 +4,26 @@ using UnityEngine;
 
 public class FCharacter : MonoBehaviour
 {
-    // Start is called before the first frame update
-
     public float speed = 10f;
+    public int playerNum;
+
+    private float _health;
+    public float maxHealth;
+    private FGameController _gameController;
 
     private Rigidbody2D _rigidbody2D;
     private Animator _animator;
+    private bool isFlipped;
 
     void Start()
     {
         //Store the attached RB as a ref
         _rigidbody2D = this.GetComponent<Rigidbody2D>();
         _animator = this.GetComponent<Animator>();
+
+        _health = maxHealth;
+
+        _gameController = GameObject.FindWithTag("GameController").GetComponent<FGameController>();
     }
 
     public void ExecuteCommand(FCommand command)
@@ -36,6 +44,12 @@ public class FCharacter : MonoBehaviour
     private void Move(FMoveCommand command)
     {
         _rigidbody2D.velocity = command.moveDirection * speed;
+
+        Vector2 scale = this.transform.localScale;
+        if(command.moveDirection.x > 0) scale.x = 1f;
+        else scale.x = -1f;
+
+        this.transform.localScale = scale;
     }
 
     private void Attack()
@@ -43,9 +57,17 @@ public class FCharacter : MonoBehaviour
         _animator.SetTrigger("Attack");
     }
 
+    public void Hit()
+    {
+        _animator.SetTrigger("Hit");
+        _health -= 10f;
+        _gameController.SetPlayerHealth(playerNum, _health / maxHealth);
+    }
+
     // Update is called once per frame
     void Update()
     {
-        _animator.SetFloat("Speed", _rigidbody2D.velocity.x);
+        //Yeet the fact that we're moving to the animator'
+        _animator.SetFloat("Speed", Mathf.Abs(_rigidbody2D.velocity.normalized.x));
     }
 }
